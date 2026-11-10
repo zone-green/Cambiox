@@ -61,10 +61,42 @@ select#flt{background:var(--sf);color:var(--ink);border:1px solid var(--line);bo
 #af button{font-size:.78rem;padding:9px 2px}
 .res{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:.9rem}
 .res div{display:flex;justify-content:space-between;padding:2px 0}
+
+/* Acceso y pantalla de carga Cambiox */
+#auth{min-height:100svh;display:flex;flex-direction:column;justify-content:center;position:relative;padding:34px 0!important}
+#auth:before{content:"";position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 15%,rgba(47,212,174,.19),transparent 48%),linear-gradient(155deg,#07130f,#101b18 55%,#08110e)}
+#auth .logo{font-size:2rem;letter-spacing:-.07em;text-align:center;margin-bottom:24px!important;color:#f2fff9}
+#auth .logo i{color:#35e0b5}
+#auth .card{background:rgba(18,34,29,.92);border:1px solid rgba(65,220,180,.2);box-shadow:0 22px 70px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.04);backdrop-filter:blur(16px);padding:25px 22px;border-radius:25px;color:#effaf5}
+#auth .card h1{font-size:1.85rem}
+#auth .card .mute{color:#a7bdb4}
+#auth input{background:#0c1a15;border-color:#29443a;color:#f3fff9}
+#auth .tabs{background:#0b1914}
+#auth .tabs button[aria-selected=true]{background:#1b332a;color:#f4fff9;box-shadow:0 0 0 1px #315b4b}
+#auth .btn{background:linear-gradient(110deg,#16a982,#35d9ad);color:#04251b;box-shadow:0 9px 24px rgba(24,190,145,.2);transition:transform .18s,filter .18s}
+#auth .btn:active{transform:scale(.985)}
+#auth .err{color:#ff8585}
+#auth .card:after{content:"●  BTC     ●  ETH     ●  USDT     ●  SOL";display:block;text-align:center;color:#72968a;font-size:.66rem;letter-spacing:.12em;margin-top:19px;opacity:.8}
+#loadscreen{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center, #17382c 0%,#0b1712 55%,#050b08 100%);color:#effff8;transition:opacity .35s ease,visibility .35s ease}
+#loadscreen.off{opacity:0;visibility:hidden;pointer-events:none}
+.loadbox{text-align:center;padding:28px;width:min(90vw,340px)}
+.coinorbit{width:104px;height:104px;margin:0 auto 24px;position:relative;border:1px solid rgba(65,230,184,.25);border-radius:50%;display:grid;place-items:center;box-shadow:0 0 45px rgba(30,210,158,.12),inset 0 0 30px rgba(30,210,158,.08)}
+.coinorbit:before,.coinorbit:after{content:"";position:absolute;inset:9px;border:2px solid transparent;border-top-color:#42e4b7;border-right-color:#42e4b7;border-radius:50%;animation:spin 1.25s linear infinite}
+.coinorbit:after{inset:-6px;border-top-color:rgba(66,228,183,.35);border-right-color:transparent;animation-duration:2.1s;animation-direction:reverse}
+.coincore{width:55px;height:55px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#2be0ae,#087d61);color:#05251b;font-size:1.8rem;font-weight:800;box-shadow:0 0 28px rgba(47,212,174,.35);animation:pulse 1.5s ease-in-out infinite}
+.loadbrand{font-size:1.75rem;font-weight:800;letter-spacing:-.06em}.loadbrand span{color:#42e4b7}
+.loadlabel{color:#9bb9ad;font-size:.82rem;margin-top:9px;letter-spacing:.12em;text-transform:uppercase}
+.loadline{height:3px;background:#1b382d;border-radius:9px;overflow:hidden;margin:22px auto 0;width:180px}
+.loadline i{display:block;height:100%;width:40%;border-radius:9px;background:#42e4b7;animation:loadingbar 1.25s ease-in-out infinite}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{50%{transform:scale(1.08);filter:brightness(1.15)}}@keyframes loadingbar{0%{transform:translateX(-110%)}100%{transform:translateX(360%)}}
+@media(prefers-reduced-motion:reduce){.coinorbit:before,.coinorbit:after,.coincore,.loadline i{animation:none}}
+
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 </head>
 <body>
+<div id="loadscreen" aria-live="polite" aria-label="Cargando Cambiox"><div class="loadbox"><div class="coinorbit"><div class="coincore">₿</div></div><div class="loadbrand">Cambiox<span>.</span></div><div class="loadlabel" id="loadlabel">Preparando tu espacio cripto</div><div class="loadline"><i></i></div></div></div>
+
 <div class="w">
 
 <!-- ACCESO -->
@@ -147,6 +179,8 @@ select#flt{background:var(--sf);color:var(--ink);border:1px solid var(--line);bo
 const RAW=`USDT|Tether (BEP20)|0.9991|0,BNB|BNB|689.69|0.48,BTC|Bitcoin|75046.4|0.62,TRX|Tron|0.317|-0.85,USDT|Tether (TRC20)|0.9991|0`;
 const COINS=RAW.split(",").map(r=>{const[s,n,p,c]=r.split("|");return{s,n,p:+p,c:+c}});
 const $=id=>document.getElementById(id);
+const loading=(show,label)=>{const el=$("loadscreen");if(!el)return;$("loadlabel").textContent=label||"Cargando Cambiox";el.classList.toggle("off",!show)};
+window.addEventListener("load",()=>setTimeout(()=>loading(false),950));
 const fmt=(v,d)=>v.toLocaleString("es",{maximumFractionDigits:d??(v<0.01?8:v<1?4:2),minimumFractionDigits:d===undefined&&v>=1?2:0});
 const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
 document.documentElement.dataset.theme="dark";
@@ -193,35 +227,12 @@ $("submit").onclick=async()=>{
   if(!/^\S+@\S+\.\S+$/.test(email))return er.textContent="Escribe un correo válido.";
   if(pass.length<6)return er.textContent="La contraseña debe tener al menos 6 caracteres.";
   if(tab==="up"&&!name)return er.textContent="Escribe tu nombre.";
-  $("submit").disabled=true;er.textContent="";
+  $("submit").disabled=true;er.textContent="";loading(true,tab==="in"?"Iniciando sesión…":"Creando tu cuenta…");
   try{
     if(tab==="up"){
-      const {data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:"https://zone-green.github.io/Cambiox/",data:{name,promo}}});
+      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name,promo}}});
       if(error)throw error;
-      if(!data.session){
-        er.style.color="var(--up)";
-        er.textContent="Cuenta creada. Si no recibiste el correo, puedes reenviarlo:";
-        const resend=document.createElement("button");
-        resend.type="button";
-        resend.textContent="Reenviar correo de confirmación";
-        resend.style.cssText="display:block;margin-top:10px;padding:10px 14px;border:1px solid var(--up);border-radius:10px;background:transparent;color:var(--up);font-weight:700;cursor:pointer";
-        resend.onclick=async()=>{
-          resend.disabled=true;
-          resend.textContent="Enviando...";
-          try{
-            const {error:resendError}=await sb.auth.resend({type:"signup",email,options:{emailRedirectTo:"https://zone-green.github.io/Cambiox/"}});
-            if(resendError)throw resendError;
-            er.firstChild.textContent="Solicitud enviada. Revisa Gmail y también Spam/Promociones. ";
-            resend.textContent="Correo solicitado";
-          }catch(e){
-            er.firstChild.textContent="No se pudo reenviar: "+authMsg(e)+" ";
-            resend.disabled=false;
-            resend.textContent="Intentar reenviar otra vez";
-          }
-        };
-        er.appendChild(resend);
-        return;
-      }
+      if(!data.session){er.style.color="var(--up)";er.textContent="Cuenta creada. Revisa tu correo, confirma y luego entra.";return}
       start(toUser(data.user));
     }else{
       const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
@@ -229,10 +240,10 @@ $("submit").onclick=async()=>{
       start(toUser(data.user));
     }
   }catch(e){er.style.color="var(--dn)";er.textContent=authMsg(e)}
-  finally{$("submit").disabled=false}
+  finally{$("submit").disabled=false;loading(false)}
 };
 function start(u){
-  user=u;mem.session=u;store.set("cx_ses",u);
+  loading(false);user=u;mem.session=u;store.set("cx_ses",u);
   $("auth").classList.add("hide");$("app").classList.remove("hide");
   $("hi").textContent="Hola, "+u.name;
   $("pm").innerHTML=u.promo?`<div class="promo">Código <b>${u.promo.replace(/[<>&]/g,"")}</b> aplicado: comisión reducida al 0,5%.</div>`:"";
