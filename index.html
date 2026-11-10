@@ -198,7 +198,30 @@ $("submit").onclick=async()=>{
     if(tab==="up"){
       const {data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:"https://zone-green.github.io/Cambiox/",data:{name,promo}}});
       if(error)throw error;
-      if(!data.session){er.style.color="var(--up)";er.textContent="Cuenta creada. Revisa tu correo, confirma y luego entra.";return}
+      if(!data.session){
+        er.style.color="var(--up)";
+        er.textContent="Cuenta creada. Si no recibiste el correo, puedes reenviarlo:";
+        const resend=document.createElement("button");
+        resend.type="button";
+        resend.textContent="Reenviar correo de confirmación";
+        resend.style.cssText="display:block;margin-top:10px;padding:10px 14px;border:1px solid var(--up);border-radius:10px;background:transparent;color:var(--up);font-weight:700;cursor:pointer";
+        resend.onclick=async()=>{
+          resend.disabled=true;
+          resend.textContent="Enviando...";
+          try{
+            const {error:resendError}=await sb.auth.resend({type:"signup",email,options:{emailRedirectTo:"https://zone-green.github.io/Cambiox/"}});
+            if(resendError)throw resendError;
+            er.firstChild.textContent="Solicitud enviada. Revisa Gmail y también Spam/Promociones. ";
+            resend.textContent="Correo solicitado";
+          }catch(e){
+            er.firstChild.textContent="No se pudo reenviar: "+authMsg(e)+" ";
+            resend.disabled=false;
+            resend.textContent="Intentar reenviar otra vez";
+          }
+        };
+        er.appendChild(resend);
+        return;
+      }
       start(toUser(data.user));
     }else{
       const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
