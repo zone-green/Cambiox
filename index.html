@@ -151,8 +151,8 @@ const fmt=(v,d)=>v.toLocaleString("es",{maximumFractionDigits:d??(v<0.01?8:v<1?4
 const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
 document.documentElement.dataset.theme="dark";
 // ===== CONFIGURA AQUÍ (Supabase > Project Settings > API) =====
-const SUPABASE_URL="https://TU-PROYECTO.supabase.co";
-const SUPABASE_ANON_KEY="TU_ANON_PUBLIC_KEY";
+const SUPABASE_URL="https://ipygebuwqcwhuqdyblnn.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_fhyEiq8Lt7BY5JOLApv8Gw_SozqiTU6";
 // ================================================================
 const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
 const NO_CFG=SUPABASE_URL.includes("TU-PROYECTO");
