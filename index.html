@@ -196,7 +196,7 @@ $("submit").onclick=async()=>{
   $("submit").disabled=true;er.textContent="";
   try{
     if(tab==="up"){
-      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name,promo}}});
+      const {data,error}=await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:"https://zone-green.github.io/Cambiox/",data:{name,promo}}});
       if(error)throw error;
       if(!data.session){er.style.color="var(--up)";er.textContent="Cuenta creada. Revisa tu correo, confirma y luego entra.";return}
       start(toUser(data.user));
