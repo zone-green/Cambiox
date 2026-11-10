@@ -61,6 +61,13 @@ select#flt{background:var(--sf);color:var(--ink);border:1px solid var(--line);bo
 #af button{font-size:.78rem;padding:9px 2px}
 .res{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:.9rem}
 .res div{display:flex;justify-content:space-between;padding:2px 0}
+.order-mini{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;text-align:left;background:var(--sf);border:1px solid var(--line);border-radius:16px;padding:13px 15px;color:var(--ink);font:inherit;cursor:pointer}
+.order-mini .om-left{min-width:0}.order-mini b{display:block;font-size:.92rem}.order-mini small{display:block;color:var(--mute);font-size:.75rem;margin-top:3px}
+.order-mini .om-right{display:flex;align-items:center;gap:8px;flex:none}.order-mini .chev{color:var(--mute);font-size:1.2rem}
+.admin-order{position:relative}.kebab{border:0;background:var(--sf);color:var(--mute);font-size:1.35rem;line-height:1;border-radius:9px;width:34px;height:32px;cursor:pointer}
+.kmenu{position:absolute;right:8px;top:42px;z-index:8;background:var(--sf);border:1px solid var(--line);box-shadow:0 8px 25px #0005;border-radius:12px;padding:5px;min-width:145px}
+.kmenu button{display:block;width:100%;border:0;background:none;color:var(--ink);text-align:left;padding:10px;border-radius:8px;font:600 .82rem Sora,sans-serif}.kmenu button.danger{color:var(--dn)}
+#orderdetail .sheet{max-height:78vh}
 
 /* Acceso y pantalla de carga Cambiox */
 #auth{min-height:100svh;display:flex;flex-direction:column;justify-content:center;position:relative;padding:34px 0!important}
@@ -170,9 +177,10 @@ select#flt{background:var(--sf);color:var(--ink);border:1px solid var(--line);bo
 
 <div class="ov hide" id="adv"><div class="sheet"><button class="x" id="adc" aria-label="Cerrar">×</button>
 <h1 style="font-size:1.3rem">Panel de pedidos</h1>
-<div class="tabs" id="af"><button aria-selected="true" data-s="all">Todos</button><button aria-selected="false" data-s="review">En revisión</button><button aria-selected="false" data-s="done">Listos</button><button aria-selected="false" data-s="members" id="amem">Miembros</button></div>
+<div class="tabs" id="af"><button aria-selected="true" data-s="all">Todos</button><button aria-selected="false" data-s="review">En revisión</button><button aria-selected="false" data-s="done">Listos</button><button aria-selected="false" data-s="archived">Archivados</button><button aria-selected="false" data-s="members" id="amem">Miembros</button></div>
 <div id="ol"></div></div></div>
 
+<div class="ov hide" id="orderdetail"><div class="sheet"><button class="x" id="odc" aria-label="Cerrar">×</button><div id="odbody"></div></div></div>
 <div class="ov hide" id="lb" style="align-items:center"><img id="lbi" alt="Captura ampliada" style="max-width:96%;max-height:92vh;border-radius:12px"></div>
 
 <script>
@@ -371,7 +379,7 @@ document.addEventListener("keydown",e=>{if(e.key==="Escape")$("ov").classList.ad
 
 const ADMIN_EMAILS=["kevinwolf0047@gmail.com","adanreyricardo@gmail.com"];
 // ---- CAPA DE DATOS: al conectar Supabase, reemplaza estas 3 funciones ----
-const rowToOrder=r=>({id:r.id,t:r.created_at,email:r.email,name:r.name,mode:r.mode,label:{buy:"Compra",sell:"Venta",swap:"Cambio"}[r.mode],from:r.from_text,to:r.to_text,phone:r.phone,wallet:r.wallet,ref:r.ref,proof:r.proof_path,status:r.status});
+const rowToOrder=r=>({id:r.id,t:r.created_at,email:r.email,name:r.name,mode:r.mode,label:{buy:"Compra",sell:"Venta",swap:"Cambio"}[r.mode],from:r.from_text,to:r.to_text,phone:r.phone,wallet:r.wallet,ref:r.ref,proof:r.proof_path,status:r.status,archived:!!r.archived});
 async function getOrders(){const {data,error}=await sb.from("orders").select("*").order("created_at",{ascending:false});if(error)throw error;return data.map(rowToOrder)}
 async function addOrder(o){
   const path=`${user.id}/${o.id}.jpg`,blob=await (await fetch(o.shot)).blob();
@@ -381,6 +389,8 @@ async function addOrder(o){
   if(error)throw error;
 }
 async function setStatus(id,st){const {error}=await sb.from("orders").update({status:st}).eq("id",id);if(error)throw error}
+async function setArchived(id,value){const {error}=await sb.from("orders").update({archived:value}).eq("id",id);if(error)throw error}
+async function deleteOrder(id){const {error}=await sb.from("orders").delete().eq("id",id);if(error)throw error}
 const signed=new Map();
 async function proofUrl(p){if(!p)return "";if(signed.has(p))return signed.get(p);const {data}=await sb.storage.from("proofs").createSignedUrl(p,3600);const u=data?.signedUrl||"";if(u)signed.set(p,u);return u}
 // --------------------------------------------------------------------------
@@ -389,37 +399,53 @@ const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&g
 const isAdmin=()=>!!user&&ADMIN_EMAILS.includes(user.email);
 const fdate=t=>new Date(t).toLocaleString("es",{dateStyle:"short",timeStyle:"short"});
 let af="all";
-function card(o,admin){
+function detailBody(o,admin){
   const rows=[["De",o.from],["Recibe",o.to],o.phone&&["Teléfono",o.phone],o.wallet&&["Billetera",o.wallet],o.ref&&["Referencia",o.ref],admin&&["Cliente",o.name+" · "+o.email]].filter(Boolean);
-  const img=/^(https:|data:image\/)/.test(String(o.shot||""));
-  return `<div class="oc${admin?"":" m"}"><div class="r"><b>${esc(o.label)} · ${fdate(o.t)}</b><span class="badge b-${o.status}">${ST[o.status]}</span></div>`+
-  rows.map(r=>`<div class="r"><span>${r[0]}</span><span>${esc(r[1])}</span></div>`).join("")+
-  (admin&&img?`<img class="shot" src="${o.shot}" alt="Captura del pago">`:"")+
-  (admin&&o.status==="review"?`<div class="acts"><button style="background:var(--up);color:#04221a" data-id="${esc(o.id)}" data-s="done">Aprobar</button><button style="background:var(--dn);color:#fff" data-id="${esc(o.id)}" data-s="rejected">Rechazar</button></div>`:"")+
-  (!admin&&o.status==="review"?`<div class="mute" style="margin-top:8px">Comprobante enviado. Estamos revisando tu pago y te avisamos aquí cuando esté listo.</div>`:"")+`</div>`;
+  return `<h1 style="font-size:1.25rem;margin:6px 0 12px">${esc(o.label)} · ${fdate(o.t)}</h1><div class="r" style="margin-bottom:10px"><span class="badge b-${o.status}">${ST[o.status]}</span></div>`+
+    rows.map(r=>`<div class="r" style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line)"><span class="mute">${r[0]}</span><span style="text-align:right;word-break:break-all">${esc(r[1])}</span></div>`).join("")+
+    (admin&&o.shot?`<img class="shot" src="${o.shot}" alt="Comprobante adjunto">`:"")+
+    (!admin?`<p class="mute" style="margin-top:14px">${o.status==="review"?"Tu pedido está en revisión.":o.status==="done"?"El pedido figura como completado. Comprueba el estado por los canales oficiales antes de darlo por recibido.":"El pedido figura como rechazado. Consulta con soporte si necesitas aclaraciones."}</p>`:"");
+}
+function card(o,admin){
+  if(!admin)return `<button class="order-mini" data-open-order="${esc(o.id)}"><span class="om-left"><b>${esc(o.label)} · ${fdate(o.t)}</b><small>${esc(o.from)} → ${esc(o.to)}</small></span><span class="om-right"><span class="badge b-${o.status}">${ST[o.status]}</span><span class="chev">›</span></span></button>`;
+  const rows=[["De",o.from],["Recibe",o.to],o.phone&&["Teléfono",o.phone],o.wallet&&["Billetera",o.wallet],o.ref&&["Referencia",o.ref],["Cliente",o.name+" · "+o.email]].filter(Boolean);
+  return `<div class="oc admin-order"><div class="r"><b>${esc(o.label)} · ${fdate(o.t)}</b><span style="display:flex;align-items:center;gap:7px"><span class="badge b-${o.status}">${ST[o.status]}</span><button class="kebab" aria-label="Opciones" data-menu="${esc(o.id)}">⋮</button></span></div><div class="kmenu hide" id="km-${esc(o.id)}"><button data-action="archive" data-id="${esc(o.id)}">${o.archived?"Desarchivar":"Archivar"}</button><button class="danger" data-action="delete" data-id="${esc(o.id)}">Eliminar definitivamente</button></div>`+
+    rows.map(r=>`<div class="r"><span>${r[0]}</span><span>${esc(r[1])}</span></div>`).join("")+
+    (o.shot?`<img class="shot" src="${o.shot}" alt="Comprobante adjunto">`:"")+
+    (o.status==="review"?`<div class="acts"><button style="background:var(--up);color:#04221a" data-id="${esc(o.id)}" data-s="done">Aprobar</button><button style="background:var(--dn);color:#fff" data-id="${esc(o.id)}" data-s="rejected">Rechazar</button></div>`:"")+`</div>`;
 }
 function memberCard(m,n){return `<div class="oc"><div class="r"><b>${esc(m.name)}</b><span class="badge b-done">${n} pedidos</span></div><div class="r"><span>Correo</span><span>${esc(m.email)}</span></div><div class="r"><span>Código</span><span>${esc(m.promo||"—")}</span></div><div class="r"><span>Registro</span><span>${m.t?fdate(m.t):"—"}</span></div></div>`}
 let busy=false;
 async function refreshOrders(){
   if(!user||busy)return;busy=true;
   try{
-    const all=await getOrders(),mine=all.filter(o=>o.email===user.email).slice(0,5),pend=all.filter(o=>o.status==="review").length,adm=isAdmin();
-    $("mine").innerHTML=mine.length?`<div class="mute" style="margin:8px 0 0">Mis pedidos</div>`+mine.map(o=>card(o,false)).join(""):"";
+    const all=await getOrders();window.__orders=all;
+    const mine=all.filter(o=>o.email===user.email&&!o.archived).slice(0,5),pend=all.filter(o=>o.status==="review"&&!o.archived).length,adm=isAdmin();
+    $("mine").innerHTML=mine.length?`<div class="mute" style="margin:8px 0 0">Mis pedidos</div><div style="display:grid;gap:9px;margin-top:9px">`+mine.map(o=>card(o,false)).join("")+`</div>`:"";
     $("adm").classList.toggle("hide",!adm);$("adm").textContent="Panel"+(pend?` (${pend})`:"");
     if(adm){
       const {data}=await sb.from("profiles").select("*").order("created_at",{ascending:false}),accs=(data||[]).map(m=>({...m,t:m.created_at}));
       $("amem").textContent="Miembros ("+accs.length+")";
-      if(!$("adv").classList.contains("hide")){
+      if(!$ ("adv").classList.contains("hide")){
         if(af==="members")$("ol").innerHTML=accs.length?accs.map(m=>memberCard(m,all.filter(o=>o.email===m.email).length)).join(""):`<div class="empty">Aún no hay miembros.</div>`;
-        else{const l=all.filter(o=>af==="all"||o.status===af);for(const o of l)o.shot=await proofUrl(o.proof);$("ol").innerHTML=l.length?l.map(o=>card(o,true)).join(""):`<div class="empty">No hay pedidos.</div>`}
+        else{let l=all.filter(o=>af==="archived"?o.archived:!o.archived&&(af==="all"||o.status===af));for(const o of l)o.shot=await proofUrl(o.proof);$("ol").innerHTML=l.length?l.map(o=>card(o,true)).join(""):`<div class="empty">No hay pedidos.</div>`}
       }
     }
-  }catch(e){}finally{busy=false}
+  }catch(e){console.error(e)}finally{busy=false}
 }
 $("adm").onclick=()=>{$("adv").classList.remove("hide");refreshOrders()};
 $("adc").onclick=()=>$("adv").classList.add("hide");
 $("lb").onclick=()=>$("lb").classList.add("hide");
-$("adv").onclick=e=>{if(e.target===$("adv"))$("adv").classList.add("hide");const im=e.target.closest(".shot");if(im){$("lbi").src=im.src;$("lb").classList.remove("hide");return}const b=e.target.closest("[data-id]");if(b){setStatus(b.dataset.id,b.dataset.s).then(refreshOrders).catch(()=>alert("No se pudo actualizar el pedido."))}};
+$("adv").onclick=e=>{
+  if(e.target===$("adv"))$("adv").classList.add("hide");
+  const im=e.target.closest(".shot");if(im){$("lbi").src=im.src;$("lb").classList.remove("hide");return}
+  const menu=e.target.closest("[data-menu]");if(menu){const id=menu.dataset.menu;document.querySelectorAll(".kmenu").forEach(x=>x.classList.add("hide"));$("km-"+id).classList.toggle("hide");return}
+  const action=e.target.closest("[data-action]");if(action){const id=action.dataset.id,kind=action.dataset.action;const current=window.__orders?.find(o=>String(o.id)===String(id));const task=kind==="archive"?setArchived(id,!current?.archived):deleteOrder(id);if(kind==="delete"&&!confirm("¿Eliminar este pedido definitivamente? Esta acción no se puede deshacer."))return;task.then(refreshOrders).catch(()=>alert("No se pudo realizar la acción. Comprueba que ejecutaste el SQL de actualización."));return}
+  const b=e.target.closest("[data-id][data-s]");if(b)setStatus(b.dataset.id,b.dataset.s).then(refreshOrders).catch(()=>alert("No se pudo actualizar el pedido."));
+};
+$("mine").onclick=e=>{const b=e.target.closest("[data-open-order]");if(!b)return;const o=window.__orders?.find(x=>String(x.id)===String(b.dataset.openOrder));if(!o)return;$("odbody").innerHTML=detailBody(o,false);$("orderdetail").classList.remove("hide")};
+$("odc").onclick=()=>$("orderdetail").classList.add("hide");
+$("orderdetail").onclick=e=>{if(e.target===$("orderdetail"))$("orderdetail").classList.add("hide")};
 document.querySelectorAll("#af button").forEach(b=>b.onclick=()=>{af=b.dataset.s;document.querySelectorAll("#af button").forEach(x=>x.setAttribute("aria-selected",x===b));refreshOrders()});
 sb.channel("orders-live").on("postgres_changes",{event:"*",schema:"public",table:"orders"},()=>refreshOrders()).subscribe();
 setInterval(refreshOrders,20000);
