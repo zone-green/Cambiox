@@ -68,6 +68,7 @@ select#flt{background:var(--sf);color:var(--ink);border:1px solid var(--line);bo
 .kmenu{position:absolute;right:8px;top:42px;z-index:8;background:var(--sf);border:1px solid var(--line);box-shadow:0 8px 25px #0005;border-radius:12px;padding:5px;min-width:145px}
 .kmenu button{display:block;width:100%;border:0;background:none;color:var(--ink);text-align:left;padding:10px;border-radius:8px;font:600 .82rem Sora,sans-serif}.kmenu button.danger{color:var(--dn)}
 #orderdetail .sheet{max-height:78vh}
+.secondary{width:100%;background:none;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:11px 14px;font:600 .88rem Sora,sans-serif;cursor:pointer}
 
 /* Acceso y pantalla de carga Cambiox */
 #auth{min-height:100svh;display:flex;flex-direction:column;justify-content:center;position:relative;padding:34px 0!important}
@@ -306,7 +307,7 @@ $("list").onclick=e=>{const b=e.target.closest(".coin");if(b)open(+b.dataset.i)}
 const COMPRA=360,VENTA=300; // saldo móvil por 1 USDT: el cliente paga 360 al comprar y recibe 300 al vender
 const MI_NUMERO="59348187"; // EDITAR: número al que los clientes envían el saldo
 const usdt=c=>STABLE.includes(c.s)?1:c.p;
-const OVERRIDES={"USDT (BEP20)>USDT (TRC20)":1.6}; // EDITAR: "A>B": cuántos B recibes por 1 A (sin comisión extra)
+const OVERRIDES={}; // EDITAR: "A>B": cuántos B recibes por 1 A (sin comisión extra)
 let mode="buy";
 const WORD={buy:"compra",sell:"venta",swap:"cambio"};
 document.querySelectorAll("#md button").forEach(b=>b.onclick=()=>{mode=b.dataset.m;document.querySelectorAll("#md button").forEach(x=>x.setAttribute("aria-selected",x===b))});
@@ -331,7 +332,7 @@ function calc(){
   if(mode==="buy"){const r=usdt(c)*COMPRA;rt="1 "+c.s+" = "+fmt(r,0)+" saldo";fe="Incluida";out=fmt(a,8)+" "+c.s;payTxt=Math.round(a*r).toLocaleString("es")+" de saldo móvil"}
   else if(mode==="sell"){const r=usdt(c)*VENTA;rt="1 "+c.s+" = "+fmt(r,0)+" saldo";fe="Incluida";out=Math.round(a*r).toLocaleString("es")+" de saldo móvil";payTxt=fmt(a,8)+" "+title(c)}
   else{
-    const A=COINS[+$("p1").value],B=COINS[+$("p2").value],ov=OVERRIDES[title(A)+">"+title(B)],k=ov??A.p/B.p,gross=a*k,g=ov?0:gross*f;
+    const A=COINS[+$("p1").value],B=COINS[+$("p2").value],ov=OVERRIDES[title(A)+">"+title(B)],rv=OVERRIDES[title(B)+">"+title(A)],k=ov??(rv?1/rv:A.p/B.p),gross=a*k,g=ov?0:gross*f;
     rt="1 "+A.s+" = "+fmt(k,6)+" "+B.s;fe=ov?"Incluida":fmt(g,8)+" "+B.s;out=fmt(gross-g,8)+" "+B.s;payTxt=fmt(a,8)+" "+title(A);
   }
   $("rt").textContent=rt;$("fee").textContent=fe;$("rc").textContent=out;$("pg").textContent=payTxt;$("pay").textContent=payTxt;dep();
