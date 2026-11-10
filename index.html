@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cambiox – Cripto</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3f6f4;--sf:#fff;--ink:#0e1f1b;--mute:#5a6b66;--line:#d5dfdb;--acc:#00a383;--ai:#fff;--up:#0a8f4e;--dn:#d23c3c;--warn:#f2b134;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1512;--sf:#13221e;--ink:#e8f1ee;--mute:#92a69f;--line:#25382f;--acc:#2fd4ae;--ai:#04221a;--up:#3ddc8a;--dn:#ff7676;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1014;--sf:#1b1c21;--ink:#f1f2f4;--mute:#8d909a;--line:#2a2b32;--acc:#2fd4ae;--ai:#04221a;--up:#2fd47a;--dn:#ff5a5a;color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Sora,system-ui,sans-serif;line-height:1.45}
+.w{max-width:560px;margin:0 auto;padding:0 16px}
+.logo{font-weight:800;font-size:1.25rem;letter-spacing:-.02em}.logo i{color:var(--acc);font-style:normal}
+.card{background:var(--sf);border:1px solid var(--line);border-radius:20px;padding:22px}
+h1{font-size:1.7rem;letter-spacing:-.03em;margin:0 0 6px;font-weight:800}
+.mute{color:var(--mute);font-size:.88rem}
+.tabs{display:flex;gap:6px;background:var(--bg);padding:5px;border-radius:12px;margin:18px 0}
+.tabs button{flex:1;border:0;background:none;color:var(--mute);font:600 .9rem Sora,sans-serif;padding:10px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--sf);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+label.f{display:block;font-size:.78rem;color:var(--mute);margin:12px 0 5px}
+input{width:100%;font:500 1rem Sora,sans-serif;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:13px 14px;outline:0}
+input:focus{border-color:var(--acc)}
+.pw{position:relative}.pw input{padding-right:48px}
+.eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;color:var(--mute);cursor:pointer;display:grid;place-items:center;border-radius:10px}
+.eye[aria-pressed=true]{color:var(--acc)}
+.btn{width:100%;border:0;background:var(--acc);color:var(--ai);font:800 1rem Sora,sans-serif;padding:15px;border-radius:14px;cursor:pointer;margin-top:18px}
+button:focus-visible,input:focus-visible,.coin:focus-visible{outline:3px solid var(--warn);outline-offset:2px}
+.err{color:var(--dn);font-size:.85rem;margin-top:10px;min-height:1.2em}
+.hide{display:none!important}
+.top{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;padding:14px 0 10px}
+.bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.bar button{background:none;border:1px solid var(--line);color:var(--mute);border-radius:10px;padding:7px 12px;font:600 .8rem Sora,sans-serif;cursor:pointer}
+.search{position:relative}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--mute)}
+.search input{padding-left:42px;background:var(--sf)}
+.promo{background:var(--sf);border:1px solid var(--acc);border-radius:12px;padding:10px 14px;font-size:.85rem;margin:6px 0 4px}
+.list{list-style:none;margin:10px 0 40px;padding:0;display:grid;gap:10px}
+.coin{display:flex;align-items:center;gap:14px;padding:16px;background:var(--sf);border:0;border-radius:16px;cursor:pointer;width:100%;color:inherit;font:inherit;text-align:left}
+.av{position:relative;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.25rem;flex:none}
+.av svg{width:100%;height:100%;display:block}.av .bd{position:absolute;right:-4px;bottom:-4px;width:20px;height:20px;border-radius:50%;border:2px solid var(--sf);background:var(--sf);overflow:hidden}
+.nm{flex:1;min-width:0}.nm b{display:block;font-size:1.05rem;font-weight:600}.nm span{font-size:.92rem;color:var(--ink)}
+.pr{text-align:right;font-weight:600;font-size:1.05rem}.pr span{display:block;font-size:.92rem;color:var(--mute);font-weight:400}
+.up{color:var(--up)!important}.dn{color:var(--dn)!important}
+select#flt{background:var(--sf);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:0 10px;font:600 .85rem Sora,sans-serif}
+.empty{padding:28px;text-align:center;color:var(--mute)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{max-height:92vh;overflow:auto;background:var(--sf);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px))}
+.sheet .x{float:right;background:none;border:0;color:var(--mute);font-size:1.4rem;cursor:pointer}
+.sel{width:100%;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:13px 14px;font:500 1rem Sora,sans-serif}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:.78rem;font-weight:600;white-space:nowrap}
+.b-review{background:#f2b13426;color:var(--warn)}.b-done{background:#2fd47a26;color:var(--up)}.b-rejected{background:#ff5a5a26;color:var(--dn)}
+.oc{background:var(--bg);border-radius:14px;padding:14px;margin-top:10px;font-size:.88rem}.oc.m{background:var(--sf)}
+.oc .r{display:flex;justify-content:space-between;gap:12px;margin:4px 0}.oc .r span:first-child{color:var(--mute)}.oc .r span:last-child{text-align:right;word-break:break-all}
+.acts{display:flex;gap:8px;margin-top:10px}.acts button{flex:1;border:0;border-radius:10px;padding:11px;font:700 .85rem Sora,sans-serif;cursor:pointer}
+.btn.ghost{background:none;color:var(--mute);border:1px solid var(--line);margin-top:8px}
+.shot{width:100%;max-height:200px;object-fit:contain;border-radius:10px;margin-top:8px;background:#000;cursor:zoom-in;display:block}
+#af button{font-size:.78rem;padding:9px 2px}
+.res{background:var(--bg);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:.9rem}
+.res div{display:flex;justify-content:space-between;padding:2px 0}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+<div class="w">
+
+<!-- ACCESO -->
+<div id="auth" style="padding:36px 0">
+<div class="logo" style="margin-bottom:22px">Cambiox<i>.</i></div>
+<div class="card">
+<h1 id="at">Bienvenido</h1>
+<p class="mute" style="margin:0">Compra, vende y cambia cripto de forma segura.</p>
+<div class="tabs" role="tablist">
+<button role="tab" aria-selected="true" data-t="in">Entrar</button>
+<button role="tab" aria-selected="false" data-t="up">Crear cuenta</button>
+</div>
+<div id="fn" class="hide"><label class="f" for="name">Nombre</label><input id="name" autocomplete="name"></div>
+<label class="f" for="email">Correo electrónico</label><input id="email" type="email" autocomplete="email">
+<label class="f" for="pass">Contraseña</label><div class="pw"><input id="pass" type="password" autocomplete="current-password"><button type="button" class="eye" id="eye" aria-label="Mostrar contraseña" aria-pressed="false"><svg id="eyei" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
+<div id="fp" class="hide"><label class="f" for="promo">Código promocional (opcional)</label><input id="promo" autocapitalize="characters"></div>
+<div class="err" id="err" role="alert"></div>
+<button class="btn" id="submit" style="margin-top:6px">Entrar</button>
+</div>
+</div>
+
+<!-- APP -->
+<div id="app" class="hide">
+<div class="top">
+<div class="bar"><div><div class="logo">Cambiox<i>.</i></div><div class="mute" id="hi"></div></div><span><button id="adm" class="hide">Panel</button> <button id="out">Salir</button></span></div>
+<div class="tabs" id="md" style="margin:0 0 10px"><button aria-selected="true" data-m="buy">Comprar</button><button aria-selected="false" data-m="sell">Vender</button><button aria-selected="false" data-m="swap">Cambiar</button></div>
+<div style="display:flex;gap:8px"><div class="search" style="flex:1;min-width:0">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+<input id="q" type="search" placeholder="Buscar cripto (BTC, Tron, USDT…)" aria-label="Buscar cripto" autocomplete="off">
+</div><select id="flt" aria-label="Filtro"><option value="all">Todo</option><option value="stable">Stablecoins</option><option value="alt">Otras</option></select></div>
+<div id="pm"></div><div id="mine"></div>
+</div>
+<ul class="list" id="list"></ul>
+</div>
+</div>
+
+<!-- OPERAR -->
+<div class="ov hide" id="ov"><div class="sheet" role="dialog" aria-modal="true">
+<button class="x" id="cl" aria-label="Cerrar">×</button>
+<h1 id="ct" style="font-size:1.3rem"></h1><div class="mute" id="stp"></div>
+
+<div id="s1">
+<div id="fs" class="hide">
+<label class="f" for="p1">Pagas con</label><select id="p1" class="sel"></select>
+<label class="f" for="p2">Quieres recibir</label><select id="p2" class="sel"></select>
+</div>
+<label class="f" for="amt" id="al"></label><input id="amt" type="number" inputmode="decimal" min="0">
+<div id="fp2"><label class="f" for="ph" id="phl"></label><input id="ph" type="tel" inputmode="tel" placeholder="Número de teléfono"></div>
+<div id="fw"><label class="f" for="wa" id="wl"></label><input id="wa" placeholder="Pega tu dirección" autocomplete="off"></div>
+<div class="res"><div><span>Tasa</span><span id="rt"></span></div><div><span>Comisión</span><span id="fee"></span></div><div><b>Envías</b><b id="pg"></b></div><div><b>Recibes</b><b id="rc"></b></div></div>
+<button class="btn" id="n1">Continuar</button>
+</div>
+
+<div id="s2" class="hide">
+<div class="res" id="dep"><div style="display:block"><span class="mute" id="dl"></span></div><div style="gap:8px;margin-top:8px"><input id="dv" readonly aria-label="Dirección o número" style="font-size:.8rem;padding:10px"><button type="button" class="btn" id="cpy" style="width:auto;margin:0;padding:10px 14px;font-size:.85rem">Copiar</button></div></div>
+<div class="res"><div><b>Debes enviar</b><b id="pay"></b></div></div>
+<button class="btn" id="n2">Ya envié, continuar</button>
+<button class="btn ghost" data-back="1">Atrás</button>
+</div>
+
+<div id="s3" class="hide">
+<label class="f" for="shot">Captura de pantalla de la transferencia</label>
+<input id="shot" type="file" accept="image/*">
+<img id="prev" class="hide" alt="Vista previa de la captura" style="max-width:100%;max-height:260px;object-fit:contain;border-radius:12px;margin-top:10px">
+<label class="f" for="ref">Referencia (opcional)</label><input id="ref" placeholder="Hash, ID o nota" autocomplete="off">
+<button class="btn" id="ok">Listo</button>
+<button class="btn ghost" data-back="2">Atrás</button>
+</div>
+<div class="err" id="oe" role="status"></div>
+</div></div>
+
+<div class="ov hide" id="adv"><div class="sheet"><button class="x" id="adc" aria-label="Cerrar">×</button>
+<h1 style="font-size:1.3rem">Panel de pedidos</h1>
+<div class="tabs" id="af"><button aria-selected="true" data-s="all">Todos</button><button aria-selected="false" data-s="review">En revisión</button><button aria-selected="false" data-s="done">Listos</button><button aria-selected="false" data-s="members" id="amem">Miembros</button></div>
+<div id="ol"></div></div></div>
+
+<div class="ov hide" id="lb" style="align-items:center"><img id="lbi" alt="Captura ampliada" style="max-width:96%;max-height:92vh;border-radius:12px"></div>
+
+<script>
+const RAW=`USDT|Tether (BEP20)|0.9991|0,BNB|BNB|689.69|0.48,BTC|Bitcoin|75046.4|0.62,TRX|Tron|0.317|-0.85,USDT|Tether (TRC20)|0.9991|0`;
+const COINS=RAW.split(",").map(r=>{const[s,n,p,c]=r.split("|");return{s,n,p:+p,c:+c}});
+const $=id=>document.getElementById(id);
+const fmt=(v,d)=>v.toLocaleString("es",{maximumFractionDigits:d??(v<0.01?8:v<1?4:2),minimumFractionDigits:d===undefined&&v>=1?2:0});
+const hue=s=>{let h=0;for(const c of s)h=(h*31+c.charCodeAt(0))%360;return h};
+document.documentElement.dataset.theme="dark";
+// ===== CONFIGURA AQUÍ (Supabase > Project Settings > API) =====
+const SUPABASE_URL="https://TU-PROYECTO.supabase.co";
+const SUPABASE_ANON_KEY="TU_ANON_PUBLIC_KEY";
+// ================================================================
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true}});
+const NO_CFG=SUPABASE_URL.includes("TU-PROYECTO");
+let tab="in",user=null,cur=null,op="buy";
+const wn=()=>{try{const o=JSON.parse(window.name);return o&&typeof o==="object"?o:{}}catch(e){return {}}};
+const store={
+  get(k){let v=null;try{v=localStorage.getItem(k)}catch(e){}
+    if(v==null){try{v=sessionStorage.getItem(k)}catch(e){}}
+    if(v==null&&k==="cx_ses")v=wn()[k]??null;
+    try{return v==null?null:JSON.parse(v)}catch(e){return null}},
+  set(k,v){const j=JSON.stringify(v);try{localStorage.setItem(k,j)}catch(e){}try{sessionStorage.setItem(k,j)}catch(e){}
+    if(k==="cx_ses"){const w=wn();w[k]=j;try{window.name=JSON.stringify(w)}catch(e){}}}
+};
+let mem={accounts:{},session:null};
+const getAcc=()=>store.get("cx_acc")||mem.accounts, setAcc=a=>{mem.accounts=a;store.set("cx_acc",a)};
+async function hash(t){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(t));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+
+const EYE='<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',EYEOFF='<path d="M17.9 17.9A10.5 10.5 0 0 1 12 19C5.5 19 2 12 2 12a18 18 0 0 1 4.1-5.1M9.9 5.2A9.7 9.7 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-2.2 3.2M14.1 14.1a3 3 0 1 1-4.2-4.2M3 3l18 18"/>';
+$("eye").onclick=()=>{const show=$("pass").type==="password";$("pass").type=show?"text":"password";$("eye").setAttribute("aria-pressed",show);$("eye").setAttribute("aria-label",show?"Ocultar contraseña":"Mostrar contraseña");$("eyei").innerHTML=show?EYEOFF:EYE};
+document.querySelectorAll("#auth .tabs button").forEach(b=>b.onclick=()=>{
+  tab=b.dataset.t;
+  document.querySelectorAll("#auth .tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  $("fn").classList.toggle("hide",tab==="in");$("fp").classList.toggle("hide",tab==="in");
+  $("submit").textContent=tab==="in"?"Entrar":"Crear cuenta";$("err").textContent="";
+});
+const toUser=u=>({id:u.id,email:(u.email||"").toLowerCase(),name:u.user_metadata?.name||(u.email||"").split("@")[0],promo:(u.user_metadata?.promo||"").toUpperCase()});
+const authMsg=e=>{const m=String(e?.message||e);
+  if(/invalid login/i.test(m))return "Correo o contraseña incorrectos.";
+  if(/already registered/i.test(m))return "Ese correo ya tiene cuenta. Entra con tu contraseña.";
+  if(/not confirmed/i.test(m))return "Confirma tu correo antes de entrar (revisa tu bandeja).";
+  if(/fetch|network/i.test(m))return "Sin conexión. Inténtalo de nuevo.";
+  return m};
+function showLogin(){user=null;$("app").classList.add("hide");$("auth").classList.remove("hide")}
+$("submit").onclick=async()=>{
+  const email=$("email").value.trim().toLowerCase(),pass=$("pass").value,name=$("name").value.trim(),promo=$("promo").value.trim().toUpperCase(),er=$("err");
+  er.style.color="var(--dn)";
+  if(NO_CFG)return er.textContent="Falta configurar SUPABASE_URL y SUPABASE_ANON_KEY en el archivo.";
+  if(!/^\S+@\S+\.\S+$/.test(email))return er.textContent="Escribe un correo válido.";
+  if(pass.length<6)return er.textContent="La contraseña debe tener al menos 6 caracteres.";
+  if(tab==="up"&&!name)return er.textContent="Escribe tu nombre.";
+  $("submit").disabled=true;er.textContent="";
+  try{
+    if(tab==="up"){
+      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name,promo}}});
+      if(error)throw error;
+      if(!data.session){er.style.color="var(--up)";er.textContent="Cuenta creada. Revisa tu correo, confirma y luego entra.";return}
+      start(toUser(data.user));
+    }else{
+      const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
+      if(error)throw error;
+      start(toUser(data.user));
+    }
+  }catch(e){er.style.color="var(--dn)";er.textContent=authMsg(e)}
+  finally{$("submit").disabled=false}
+};
+function start(u){
+  user=u;mem.session=u;store.set("cx_ses",u);
+  $("auth").classList.add("hide");$("app").classList.remove("hide");
+  $("hi").textContent="Hola, "+u.name;
+  $("pm").innerHTML=u.promo?`<div class="promo">Código <b>${u.promo.replace(/[<>&]/g,"")}</b> aplicado: comisión reducida al 0,5%.</div>`:"";
+  $("err").textContent="";render();refreshOrders();
+}
+$("out").onclick=()=>{sb.auth.signOut();user=null;mem.session=null;store.set("cx_ses",null);$("app").classList.add("hide");$("auth").classList.remove("hide");$("pass").value=""};
+
+const NET={BEP20:"#f0b90b",TRC20:"#ef0027",ERC20:"#627eea",Solana:"#9945ff",Polygon:"#8247e5",Arbitrum:"#28a0f0"};
+const BR={BTC:["#f7931a","₿"],ETH:["#627eea","Ξ"],BNB:["#f0b90b","B"],TRX:["#ef0027","T"],LTC:["#345d9d","Ł"],USDT:["#26a17b","₮"],USDC:["#2775ca","$"],DAI:["#f5ac37","D"],SOL:["#9945ff","S"],XRP:["#363a45","X"],DOGE:["#c2a633","Ð"],ADA:["#0033ad","A"],AVAX:["#e84142","A"],LINK:["#2a5ada","L"],DOT:["#e6007a","D"],POL:["#8247e5","P"],SHIB:["#e0432b","S"],TON:["#0098ea","T"],BCH:["#8dc351","₿"],XLM:["#363a45","S"],ATOM:["#2e3148","A"],ETC:["#3ab83a","E"],XMR:["#ff6600","M"],NEAR:["#363a45","N"],UNI:["#ff007a","U"],APT:["#363a45","A"],FIL:["#0090ff","F"],ARB:["#28a0f0","A"],OP:["#ff0420","OP"],HBAR:["#363a45","ℏ"],ICP:["#7b3fe4","∞"],VET:["#15bdff","V"],ALGO:["#363a45","A"],AAVE:["#b6509e","A"],MKR:["#1aab9b","M"],SAND:["#04adef","S"],MANA:["#ff2d55","M"],PEPE:["#3d8b37","P"],SUI:["#4da2ff","S"],INJ:["#00a3b4","I"],EOS:["#363a45","E"],DASH:["#008de4","D"],ZEC:["#f4b728","Z"]};
+const W='fill="#fff"';
+const IC={
+BTC:'<circle cx="16" cy="16" r="16" fill="#f7931a"/><g transform="rotate(14 16 16)"><path fill-rule="evenodd" fill="#fff" d="M11.5 8.5h5.8c2.3 0 3.8 1.1 3.8 3 0 1.3-.7 2.2-1.9 2.7 1.6.4 2.6 1.5 2.6 3.1 0 2.2-1.8 3.7-4.4 3.7h-5.9zM14 10.8v3h2.9c1 0 1.6-.6 1.6-1.5s-.6-1.5-1.6-1.5zM14 15.9v3.4h3.2c1.1 0 1.8-.7 1.8-1.7s-.7-1.7-1.8-1.7z"/><rect x="13.9" y="6" width="1.5" height="3" '+W+'/><rect x="17.2" y="6" width="1.5" height="3" '+W+'/><rect x="13.9" y="22" width="1.5" height="3" '+W+'/><rect x="17.2" y="22" width="1.5" height="3" '+W+'/></g>',
+BNB:'<circle cx="16" cy="16" r="16" fill="#f0b90b"/><g '+W+'><path d="M16 13.5l2.5 2.5-2.5 2.5-2.5-2.5z"/><path d="M16 8.5l3.4 3.4-1.4 1.4-2-2-2 2-1.4-1.4z"/><path d="M16 23.5l-3.4-3.4 1.4-1.4 2 2 2-2 1.4 1.4z"/><path d="M8.5 16l3.4-3.4 1.4 1.4-2 2 2 2-1.4 1.4z"/><path d="M23.5 16l-3.4-3.4-1.4 1.4 2 2-2 2 1.4 1.4z"/></g>',
+TRX:'<circle cx="16" cy="16" r="16" fill="#ef0027"/><g fill="none" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M8.5 9.5l15 2.8-7.4 12.2z"/><path d="M8.5 9.5l8.6 9.3M23.5 12.3l-10.2 2.2"/></g>',
+LTC:'<circle cx="16" cy="16" r="16" fill="#345d9d"/><path '+W+' d="M13 23.5l1.3-5-2.1.8.6-2.1 2.1-.8 1.8-7.1h3.4l-1.5 6 2.2-.8-.6 2.1-2.2.8-.8 3.2h6.5l-.8 2.9z"/>',
+ETH:'<circle cx="16" cy="16" r="16" fill="#627eea"/><path '+W+' opacity=".7" d="M16 6.5l-6 10 6 3.6z"/><path '+W+' d="M16 6.5l6 10-6 3.6z"/><path '+W+' opacity=".7" d="M16 21.4l-6-3.6 6 8.7z"/><path '+W+' d="M16 21.4l6-3.6-6 8.7z"/>',
+USDT:'<path fill="#26a17b" d="M8 5h16l6 7.5L16 28 2 12.5z"/><g '+W+'><rect x="9" y="9.5" width="14" height="2.8"/><rect x="14.7" y="12" width="2.6" height="9"/></g><ellipse cx="16" cy="15.3" rx="6.2" ry="1.7" fill="none" stroke="#fff" stroke-width="1.2"/>'
+};
+Object.assign(IC,{
+SOL:'<circle cx="16" cy="16" r="16" fill="#1a1a2e"/><g fill="#14f195"><path d="M11 9.5h13l-2.5 2.6H8.5z"/><path d="M8.5 14.7h13l2.5 2.6H11z"/><path d="M11 19.9h13l-2.5 2.6H8.5z"/></g>',
+USDC:'<circle cx="16" cy="16" r="16" fill="#2775ca"/><circle cx="16" cy="16" r="9" fill="none" stroke="#fff" stroke-width="1.6"/><text x="16" y="20.8" text-anchor="middle" font-size="13" font-weight="800" fill="#fff" font-family="Sora,sans-serif">$</text>',
+AVAX:'<circle cx="16" cy="16" r="16" fill="#e84142"/><path fill-rule="evenodd" fill="#fff" d="M16 8.5l8 14H8zM16 15.6l-3 5.3h6z"/>',
+LINK:'<circle cx="16" cy="16" r="16" fill="#2a5ada"/><path fill="none" stroke="#fff" stroke-width="2.6" stroke-linejoin="round" d="M16 8.2l6.8 3.9v7.8L16 23.8l-6.8-3.9v-7.8z"/>',
+DOT:'<circle cx="16" cy="16" r="16" fill="#e6007a"/><g fill="#fff"><circle cx="16" cy="16" r="2.8"/><circle cx="16" cy="9.3" r="2"/><circle cx="16" cy="22.7" r="2"/><circle cx="10.2" cy="12.7" r="1.6"/><circle cx="21.8" cy="12.7" r="1.6"/><circle cx="10.2" cy="19.3" r="1.6"/><circle cx="21.8" cy="19.3" r="1.6"/></g>',
+ADA:'<circle cx="16" cy="16" r="16" fill="#0033ad"/><g fill="#fff"><circle cx="16" cy="16" r="2"/><circle cx="22.5" cy="16" r="1.3"/><circle cx="19.2" cy="21.6" r="1.3"/><circle cx="12.8" cy="21.6" r="1.3"/><circle cx="9.5" cy="16" r="1.3"/><circle cx="12.8" cy="10.4" r="1.3"/><circle cx="19.2" cy="10.4" r="1.3"/><circle cx="16" cy="8.5" r=".9"/><circle cx="16" cy="23.5" r=".9"/></g>',
+XRP:'<circle cx="16" cy="16" r="16" fill="#363a45"/><path fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" d="M9.5 10l4.2 4.2a3.3 3.3 0 0 0 4.6 0L22.5 10M9.5 22l4.2-4.2a3.3 3.3 0 0 1 4.6 0L22.5 22"/>',
+ATOM:'<circle cx="16" cy="16" r="16" fill="#2e3148"/><g fill="none" stroke="#fff" stroke-width="1.2"><ellipse cx="16" cy="16" rx="9" ry="3.6"/><ellipse cx="16" cy="16" rx="9" ry="3.6" transform="rotate(60 16 16)"/><ellipse cx="16" cy="16" rx="9" ry="3.6" transform="rotate(120 16 16)"/></g><circle cx="16" cy="16" r="1.8" fill="#fff"/>',
+TON:'<circle cx="16" cy="16" r="16" fill="#0098ea"/><path fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" d="M9.5 10h13L16 23.5zM16 10v13.5"/>',
+XLM:'<circle cx="16" cy="16" r="16" fill="#363a45"/><circle cx="16" cy="16" r="6.5" fill="none" stroke="#fff" stroke-width="1.6"/><path stroke="#fff" stroke-width="1.6" stroke-linecap="round" d="M8 12.5l16 7"/>'
+});
+IC.ETC=IC.ETH.replace("#627eea","#3ab83a");
+const NETC={BEP20:"BNB",TRC20:"TRX",ERC20:"ETH",Solana:"SOL",Polygon:"POL",Arbitrum:"ARB"};
+const svg=(sym,bg,ch)=>`<svg viewBox="0 0 32 32" aria-hidden="true">${IC[sym]||`<circle cx="16" cy="16" r="16" fill="${bg}"/><text x="16" y="21.5" text-anchor="middle" font-size="${ch.length>1?12:15}" font-weight="800" fill="#fff" font-family="Sora,sans-serif">${ch}</text>`}</svg>`;
+const STABLE=["USDT","USDC","DAI"];
+const netOf=c=>c.s==="USDT"?(c.n.match(/\((.*)\)/)||[])[1]:null;
+const title=c=>{const n=netOf(c);return n?`USDT (${n})`:c.s==="BNB"?"BNB (BEP20)":(c.n===c.s||c.s==="TRX")?c.s:`${c.s} (${c.n})`};
+const px=v=>"$"+v.toLocaleString("en-US",{maximumSignificantDigits:v>=1000?6:5});
+function render(){
+  const q=$("q").value.trim().toLowerCase(),f=$("flt").value;
+  const rows=COINS.map((c,i)=>({...c,i})).filter(c=>(!q||c.s.toLowerCase().includes(q)||c.n.toLowerCase().includes(q))&&(f==="all"||(f==="stable")===STABLE.includes(c.s)));
+  $("list").innerHTML=rows.length?rows.map(c=>{
+    const bg=(BR[c.s]||[])[0]||"hsl("+hue(c.n)+" 55% 42%)",net=netOf(c);
+    const ch=c.c?`<span class="${c.c>0?"up":"dn"}" style="display:inline;margin-left:6px">${c.c>0?"+":""}${c.c.toFixed(2)}%</span>`:"";
+    return `<li><button class="coin" data-i="${c.i}"><span class="av">${svg(c.s,bg,(BR[c.s]||[0,c.s[0]])[1])}${net?`<span class="bd">${svg(NETC[net],NET[net],net[0])}</span>`:""}</span>
+<span class="nm"><b>${title(c)}</b><span>${px(c.p)}${ch}</span></span>
+<span class="pr">0<span>$0</span></span></button></li>`}).join(""):`<li class="empty">No encontramos "${q.replace(/[<>&]/g,"")}". Prueba con otro nombre.</li>`;
+}
+$("flt").onchange=render;
+$("q").oninput=render;
+$("list").onclick=e=>{const b=e.target.closest(".coin");if(b)open(+b.dataset.i)};
+
+const COMPRA=360,VENTA=300; // saldo móvil por 1 USDT: el cliente paga 360 al comprar y recibe 300 al vender
+const MI_NUMERO="59348187"; // EDITAR: número al que los clientes envían el saldo
+const usdt=c=>STABLE.includes(c.s)?1:c.p;
+const OVERRIDES={"USDT (BEP20)>USDT (TRC20)":1.6}; // EDITAR: "A>B": cuántos B recibes por 1 A (sin comisión extra)
+let mode="buy";
+const WORD={buy:"compra",sell:"venta",swap:"cambio"};
+document.querySelectorAll("#md button").forEach(b=>b.onclick=()=>{mode=b.dataset.m;document.querySelectorAll("#md button").forEach(x=>x.setAttribute("aria-selected",x===b))});
+let payTxt="",shotData="";
+const ADDR={BEP20:"0xd40E216613764E3F7f1D7fa486a326BF30C3eaE4",BNB:"0xd40E216613764E3F7f1D7fa486a326BF30C3eaE4",BTC:"bc1qdkkhd6htjpsqdm3r7z2ujltzj2z4pwt3394nte",TRC20:"TGDea94zy8abxC9WZLxtojJnuRSnrvmmZk",TRX:"TGDea94zy8abxC9WZLxtojJnuRSnrvmmZk"};
+const LBL={BEP20:"USDT · red BEP20",BNB:"BNB · red BEP20 (BSC)",BTC:"Bitcoin · red Bitcoin",TRC20:"USDT · red TRC20",TRX:"TRX · red TRC20 (TRON)"};
+const dkey=c=>c.s==="USDT"?netOf(c):c.s;
+function go(n){["s1","s2","s3"].forEach((x,k)=>$(x).classList.toggle("hide",k+1!==n));$("stp").textContent="Paso "+n+" de 3 · "+["Cantidad","Pago","Comprobante"][n-1];$("oe").textContent=""}
+function open(i){
+  cur=i;const c=COINS[i];
+  $("ct").textContent=mode==="swap"?"Cambiar cripto":(mode==="buy"?"Comprar ":"Vender ")+title(c);
+  $("fs").classList.toggle("hide",mode!=="swap");$("fp2").classList.toggle("hide",mode==="swap");$("fw").classList.toggle("hide",mode==="sell");
+  if(mode==="swap"){const o=COINS.map((x,k)=>`<option value="${k}">${title(x)}</option>`).join("");$("p1").innerHTML=o;$("p2").innerHTML=o;$("p1").value=i;$("p2").value=i===0?4:0}
+  $("al").textContent=mode==="buy"?"¿Cuántos "+title(c)+" quieres comprar?":mode==="sell"?"¿Cuántos "+title(c)+" vendes?":"Cantidad que pagas";
+  $("phl").textContent=mode==="buy"?"Tu número de teléfono (desde donde pagas)":"Número de teléfono donde recibes el saldo";
+  ["amt","ph","wa","ref","shot"].forEach(k=>$(k).value="");shotData="";$("prev").classList.add("hide");
+  go(1);calc();$("ov").classList.remove("hide");$("amt").focus();
+}
+function calc(){
+  const a=parseFloat($("amt").value)||0,f=user&&user.promo?.005:.01,c=COINS[cur];
+  let out,fe,rt;
+  if(mode==="buy"){const r=usdt(c)*COMPRA;rt="1 "+c.s+" = "+fmt(r,0)+" saldo";fe="Incluida";out=fmt(a,8)+" "+c.s;payTxt=Math.round(a*r).toLocaleString("es")+" de saldo móvil"}
+  else if(mode==="sell"){const r=usdt(c)*VENTA;rt="1 "+c.s+" = "+fmt(r,0)+" saldo";fe="Incluida";out=Math.round(a*r).toLocaleString("es")+" de saldo móvil";payTxt=fmt(a,8)+" "+title(c)}
+  else{
+    const A=COINS[+$("p1").value],B=COINS[+$("p2").value],ov=OVERRIDES[title(A)+">"+title(B)],k=ov??A.p/B.p,gross=a*k,g=ov?0:gross*f;
+    rt="1 "+A.s+" = "+fmt(k,6)+" "+B.s;fe=ov?"Incluida":fmt(g,8)+" "+B.s;out=fmt(gross-g,8)+" "+B.s;payTxt=fmt(a,8)+" "+title(A);
+  }
+  $("rt").textContent=rt;$("fee").textContent=fe;$("rc").textContent=out;$("pg").textContent=payTxt;$("pay").textContent=payTxt;dep();
+}
+function dep(){
+  const A=mode==="swap"?COINS[+$("p1").value]:COINS[cur],B=mode==="swap"?COINS[+$("p2").value]:COINS[cur];
+  if(mode==="buy"){$("dl").textContent="Envía el saldo móvil a este número";$("dv").value=MI_NUMERO}
+  else{const k=dkey(A);$("dl").textContent="Envía tus "+LBL[k]+". Usa solo esta red o puedes perder los fondos.";$("dv").value=ADDR[k]||""}
+  $("wl").textContent="Tu dirección de billetera para recibir "+title(B);
+}
+$("cpy").onclick=async()=>{const v=$("dv").value;try{await navigator.clipboard.writeText(v)}catch(e){$("dv").select();try{document.execCommand("copy")}catch(_){}}$("cpy").textContent="Copiado";setTimeout(()=>$("cpy").textContent="Copiar",1500)};
+["amt","p1","p2"].forEach(i=>{$(i).oninput=calc;$(i).onchange=calc});
+$("n1").onclick=()=>{
+  const a=parseFloat($("amt").value)||0,ph=$("ph").value.replace(/\D/g,""),wa=$("wa").value.trim(),m=$("oe");m.style.color="var(--dn)";
+  if(a<=0)return m.textContent="Escribe una cantidad mayor que 0.";
+  if(mode==="swap"&&$("p1").value===$("p2").value)return m.textContent="Elige dos monedas distintas.";
+  if(mode!=="swap"&&ph.length<7)return m.textContent="Escribe un número de teléfono válido.";
+  if(mode!=="sell"&&wa.length<10)return m.textContent="Escribe la dirección de billetera donde recibes.";
+  go(2);
+};
+$("n2").onclick=()=>go(3);
+document.querySelectorAll("[data-back]").forEach(b=>b.onclick=()=>go(+b.dataset.back));
+const shrink=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,900/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);res(c.toDataURL("image/jpeg",.7))};im.onerror=rej;im.src=r.result};r.onerror=rej;r.readAsDataURL(f)});
+$("shot").onchange=async()=>{
+  const f=$("shot").files[0],m=$("oe");shotData="";$("prev").classList.add("hide");if(!f)return;m.style.color="var(--dn)";
+  if(!f.type.startsWith("image/"))return m.textContent="El archivo debe ser una imagen (captura de pantalla).";
+  try{shotData=await shrink(f);$("prev").src=shotData;$("prev").classList.remove("hide");m.textContent=""}catch(e){m.textContent="No pudimos leer esa imagen. Prueba con otra."}
+};
+$("ok").onclick=async()=>{
+  const m=$("oe");m.style.color="var(--dn)";
+  if(!shotData)return m.textContent="Adjunta la captura de pantalla de la transferencia para continuar.";
+  const c=COINS[cur],B=COINS[+$("p2").value]||c,nt=x=>x.s==="USDT"?" ("+netOf(x)+")":"";
+  $("ok").disabled=true;m.style.color="var(--mute)";m.textContent="Enviando pedido…";
+  try{
+    await addOrder({id:Date.now().toString(36),email:user.email,name:user.name,mode,from:payTxt,to:$("rc").textContent+(mode==="buy"?nt(c):mode==="swap"?nt(B):""),
+      phone:mode==="swap"?"":$("ph").value.trim(),wallet:mode==="sell"?"":$("wa").value.trim(),ref:$("ref").value.trim(),shot:shotData});
+    $("ov").classList.add("hide");await refreshOrders();$("mine").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }catch(e){m.style.color="var(--dn)";m.textContent="No se pudo enviar el pedido. Revisa tu conexión e inténtalo otra vez."}
+  finally{$("ok").disabled=false}
+};
+$("cl").onclick=()=>$("ov").classList.add("hide");
+$("ov").onclick=e=>{if(e.target===$("ov"))$("ov").classList.add("hide")};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("ov").classList.add("hide")});
+
+
+const ADMIN_EMAILS=["kevinwolf0047@gmail.com","adanreyricardo@gmail.com"];
+// ---- CAPA DE DATOS: al conectar Supabase, reemplaza estas 3 funciones ----
+const rowToOrder=r=>({id:r.id,t:r.created_at,email:r.email,name:r.name,mode:r.mode,label:{buy:"Compra",sell:"Venta",swap:"Cambio"}[r.mode],from:r.from_text,to:r.to_text,phone:r.phone,wallet:r.wallet,ref:r.ref,proof:r.proof_path,status:r.status});
+async function getOrders(){const {data,error}=await sb.from("orders").select("*").order("created_at",{ascending:false});if(error)throw error;return data.map(rowToOrder)}
+async function addOrder(o){
+  const path=`${user.id}/${o.id}.jpg`,blob=await (await fetch(o.shot)).blob();
+  const up=await sb.storage.from("proofs").upload(path,blob,{contentType:"image/jpeg"});
+  if(up.error)throw up.error;
+  const {error}=await sb.from("orders").insert({email:o.email,name:o.name,mode:o.mode,from_text:o.from,to_text:o.to,phone:o.phone,wallet:o.wallet,ref:o.ref,proof_path:path,status:"review"});
+  if(error)throw error;
+}
+async function setStatus(id,st){const {error}=await sb.from("orders").update({status:st}).eq("id",id);if(error)throw error}
+const signed=new Map();
+async function proofUrl(p){if(!p)return "";if(signed.has(p))return signed.get(p);const {data}=await sb.storage.from("proofs").createSignedUrl(p,3600);const u=data?.signedUrl||"";if(u)signed.set(p,u);return u}
+// --------------------------------------------------------------------------
+const ST={review:"En revisión",done:"Completado",rejected:"Rechazado"};
+const esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const isAdmin=()=>!!user&&ADMIN_EMAILS.includes(user.email);
+const fdate=t=>new Date(t).toLocaleString("es",{dateStyle:"short",timeStyle:"short"});
+let af="all";
+function card(o,admin){
+  const rows=[["De",o.from],["Recibe",o.to],o.phone&&["Teléfono",o.phone],o.wallet&&["Billetera",o.wallet],o.ref&&["Referencia",o.ref],admin&&["Cliente",o.name+" · "+o.email]].filter(Boolean);
+  const img=/^(https:|data:image\/)/.test(String(o.shot||""));
+  return `<div class="oc${admin?"":" m"}"><div class="r"><b>${esc(o.label)} · ${fdate(o.t)}</b><span class="badge b-${o.status}">${ST[o.status]}</span></div>`+
+  rows.map(r=>`<div class="r"><span>${r[0]}</span><span>${esc(r[1])}</span></div>`).join("")+
+  (admin&&img?`<img class="shot" src="${o.shot}" alt="Captura del pago">`:"")+
+  (admin&&o.status==="review"?`<div class="acts"><button style="background:var(--up);color:#04221a" data-id="${esc(o.id)}" data-s="done">Aprobar</button><button style="background:var(--dn);color:#fff" data-id="${esc(o.id)}" data-s="rejected">Rechazar</button></div>`:"")+
+  (!admin&&o.status==="review"?`<div class="mute" style="margin-top:8px">Comprobante enviado. Estamos revisando tu pago y te avisamos aquí cuando esté listo.</div>`:"")+`</div>`;
+}
+function memberCard(m,n){return `<div class="oc"><div class="r"><b>${esc(m.name)}</b><span class="badge b-done">${n} pedidos</span></div><div class="r"><span>Correo</span><span>${esc(m.email)}</span></div><div class="r"><span>Código</span><span>${esc(m.promo||"—")}</span></div><div class="r"><span>Registro</span><span>${m.t?fdate(m.t):"—"}</span></div></div>`}
+let busy=false;
+async function refreshOrders(){
+  if(!user||busy)return;busy=true;
+  try{
+    const all=await getOrders(),mine=all.filter(o=>o.email===user.email).slice(0,5),pend=all.filter(o=>o.status==="review").length,adm=isAdmin();
+    $("mine").innerHTML=mine.length?`<div class="mute" style="margin:8px 0 0">Mis pedidos</div>`+mine.map(o=>card(o,false)).join(""):"";
+    $("adm").classList.toggle("hide",!adm);$("adm").textContent="Panel"+(pend?` (${pend})`:"");
+    if(adm){
+      const {data}=await sb.from("profiles").select("*").order("created_at",{ascending:false}),accs=(data||[]).map(m=>({...m,t:m.created_at}));
+      $("amem").textContent="Miembros ("+accs.length+")";
+      if(!$("adv").classList.contains("hide")){
+        if(af==="members")$("ol").innerHTML=accs.length?accs.map(m=>memberCard(m,all.filter(o=>o.email===m.email).length)).join(""):`<div class="empty">Aún no hay miembros.</div>`;
+        else{const l=all.filter(o=>af==="all"||o.status===af);for(const o of l)o.shot=await proofUrl(o.proof);$("ol").innerHTML=l.length?l.map(o=>card(o,true)).join(""):`<div class="empty">No hay pedidos.</div>`}
+      }
+    }
+  }catch(e){}finally{busy=false}
+}
+$("adm").onclick=()=>{$("adv").classList.remove("hide");refreshOrders()};
+$("adc").onclick=()=>$("adv").classList.add("hide");
+$("lb").onclick=()=>$("lb").classList.add("hide");
+$("adv").onclick=e=>{if(e.target===$("adv"))$("adv").classList.add("hide");const im=e.target.closest(".shot");if(im){$("lbi").src=im.src;$("lb").classList.remove("hide");return}const b=e.target.closest("[data-id]");if(b){setStatus(b.dataset.id,b.dataset.s).then(refreshOrders).catch(()=>alert("No se pudo actualizar el pedido."))}};
+document.querySelectorAll("#af button").forEach(b=>b.onclick=()=>{af=b.dataset.s;document.querySelectorAll("#af button").forEach(x=>x.setAttribute("aria-selected",x===b));refreshOrders()});
+sb.channel("orders-live").on("postgres_changes",{event:"*",schema:"public",table:"orders"},()=>refreshOrders()).subscribe();
+setInterval(refreshOrders,20000);
+// Sesión: se restaura sola al actualizar; solo se cierra con "Salir"
+const cached=store.get("cx_ses");if(cached)start(cached);
+sb.auth.getSession().then(({data,error})=>{
+  if(data&&data.session)start(toUser(data.session.user));
+  else if(!error&&cached)showLogin();
+});
+sb.auth.onAuthStateChange(ev=>{if(ev==="SIGNED_OUT"&&user)showLogin()});
+</script>
+</body>
+</html>
