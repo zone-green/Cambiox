@@ -391,6 +391,15 @@ async function addOrder(o){
 async function setStatus(id,st){const {error}=await sb.from("orders").update({status:st}).eq("id",id);if(error)throw error}
 async function setArchived(id,value){const {error}=await sb.from("orders").update({archived:value}).eq("id",id);if(error)throw error}
 async function deleteOrder(id){const {error}=await sb.from("orders").delete().eq("id",id);if(error)throw error}
+async function getHiddenOrderIds(){
+  const {data,error}=await sb.from("hidden_orders").select("order_id").eq("user_id",user.id);
+  if(error)throw error;
+  return new Set((data||[]).map(x=>String(x.order_id)));
+}
+async function hideOrder(id){
+  const {error}=await sb.from("hidden_orders").insert({user_id:user.id,order_id:id});
+  if(error)throw error;
+}
 const signed=new Map();
 async function proofUrl(p){if(!p)return "";if(signed.has(p))return signed.get(p);const {data}=await sb.storage.from("proofs").createSignedUrl(p,3600);const u=data?.signedUrl||"";if(u)signed.set(p,u);return u}
 // --------------------------------------------------------------------------
@@ -404,7 +413,7 @@ function detailBody(o,admin){
   return `<h1 style="font-size:1.25rem;margin:6px 0 12px">${esc(o.label)} · ${fdate(o.t)}</h1><div class="r" style="margin-bottom:10px"><span class="badge b-${o.status}">${ST[o.status]}</span></div>`+
     rows.map(r=>`<div class="r" style="display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line)"><span class="mute">${r[0]}</span><span style="text-align:right;word-break:break-all">${esc(r[1])}</span></div>`).join("")+
     (admin&&o.shot?`<img class="shot" src="${o.shot}" alt="Comprobante adjunto">`:"")+
-    (!admin?`<p class="mute" style="margin-top:14px">${o.status==="review"?"Tu pedido está en revisión.":o.status==="done"?"El pedido figura como completado. Comprueba el estado por los canales oficiales antes de darlo por recibido.":"El pedido figura como rechazado. Consulta con soporte si necesitas aclaraciones."}</p>`:"");
+    (!admin?`<p class="mute" style="margin-top:14px">${o.status==="review"?"Tu pedido está en revisión.":o.status==="done"?"El pedido figura como completado. Comprueba el estado por los canales oficiales antes de darlo por recibido.":"El pedido figura como rechazado. Consulta con soporte si necesitas aclaraciones."}</p><button class="secondary" style="margin-top:12px" data-hide-order="${esc(o.id)}">Ocultar de mi historial</button>`:"");
 }
 function card(o,admin){
   if(!admin)return `<button class="order-mini" data-open-order="${esc(o.id)}"><span class="om-left"><b>${esc(o.label)} · ${fdate(o.t)}</b><small>${esc(o.from)} → ${esc(o.to)}</small></span><span class="om-right"><span class="badge b-${o.status}">${ST[o.status]}</span><span class="chev">›</span></span></button>`;
@@ -420,7 +429,8 @@ async function refreshOrders(){
   if(!user||busy)return;busy=true;
   try{
     const all=await getOrders();window.__orders=all;
-    const mine=all.filter(o=>o.email===user.email&&!o.archived).slice(0,5),pend=all.filter(o=>o.status==="review"&&!o.archived).length,adm=isAdmin();
+    const hiddenIds=isAdmin()?new Set():await getHiddenOrderIds();
+    const mine=all.filter(o=>o.email===user.email&&!o.archived&&!hiddenIds.has(String(o.id))).slice(0,5),pend=all.filter(o=>o.status==="review"&&!o.archived).length,adm=isAdmin();
     $("mine").innerHTML=mine.length?`<div class="mute" style="margin:8px 0 0">Mis pedidos</div><div style="display:grid;gap:9px;margin-top:9px">`+mine.map(o=>card(o,false)).join("")+`</div>`:"";
     $("adm").classList.toggle("hide",!adm);$("adm").textContent="Panel"+(pend?` (${pend})`:"");
     if(adm){
@@ -440,10 +450,17 @@ $("adv").onclick=e=>{
   if(e.target===$("adv"))$("adv").classList.add("hide");
   const im=e.target.closest(".shot");if(im){$("lbi").src=im.src;$("lb").classList.remove("hide");return}
   const menu=e.target.closest("[data-menu]");if(menu){const id=menu.dataset.menu;document.querySelectorAll(".kmenu").forEach(x=>x.classList.add("hide"));$("km-"+id).classList.toggle("hide");return}
-  const action=e.target.closest("[data-action]");if(action){const id=action.dataset.id,kind=action.dataset.action;const current=window.__orders?.find(o=>String(o.id)===String(id));const task=kind==="archive"?setArchived(id,!current?.archived):deleteOrder(id);if(kind==="delete"&&!confirm("¿Eliminar este pedido definitivamente? Esta acción no se puede deshacer."))return;task.then(refreshOrders).catch(()=>alert("No se pudo realizar la acción. Comprueba que ejecutaste el SQL de actualización."));return}
+  const action=e.target.closest("[data-action]");if(action){const id=action.dataset.id,kind=action.dataset.action;const current=window.__orders?.find(o=>String(o.id)===String(id));if(kind==="delete"&&!confirm("¿Eliminar este pedido definitivamente? Esta acción no se puede deshacer."))return;const task=kind==="archive"?setArchived(id,!current?.archived):deleteOrder(id);task.then(refreshOrders).catch(err=>{console.error(err);alert("No se pudo realizar la acción. Comprueba los permisos de Supabase.")});return}
   const b=e.target.closest("[data-id][data-s]");if(b)setStatus(b.dataset.id,b.dataset.s).then(refreshOrders).catch(()=>alert("No se pudo actualizar el pedido."));
 };
 $("mine").onclick=e=>{const b=e.target.closest("[data-open-order]");if(!b)return;const o=window.__orders?.find(x=>String(x.id)===String(b.dataset.openOrder));if(!o)return;$("odbody").innerHTML=detailBody(o,false);$("orderdetail").classList.remove("hide")};
+$("odbody").onclick=async e=>{
+  const b=e.target.closest("[data-hide-order]");if(!b)return;
+  if(!confirm("¿Ocultar este pedido de tu historial? El pedido no se eliminará de la base de datos."))return;
+  b.disabled=true;
+  try{$("orderdetail").classList.add("hide");await hideOrder(b.dataset.hideOrder);await refreshOrders()}
+  catch(err){console.error(err);b.disabled=false;alert("No se pudo ocultar el pedido. Comprueba los permisos de Supabase.")}
+};
 $("odc").onclick=()=>$("orderdetail").classList.add("hide");
 $("orderdetail").onclick=e=>{if(e.target===$("orderdetail"))$("orderdetail").classList.add("hide")};
 document.querySelectorAll("#af button").forEach(b=>b.onclick=()=>{af=b.dataset.s;document.querySelectorAll("#af button").forEach(x=>x.setAttribute("aria-selected",x===b));refreshOrders()});
