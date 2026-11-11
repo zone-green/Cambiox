@@ -120,7 +120,6 @@ select#flt{background:var(--sf);color:var(--ink);border:1px solid var(--line);bo
 <div id="fn" class="hide"><label class="f" for="name">Nombre</label><input id="name" autocomplete="name"></div>
 <label class="f" for="email">Correo electrónico</label><input id="email" type="email" autocomplete="email">
 <label class="f" for="pass">Contraseña</label><div class="pw"><input id="pass" type="password" autocomplete="current-password"><button type="button" class="eye" id="eye" aria-label="Mostrar contraseña" aria-pressed="false"><svg id="eyei" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
-<div id="fp" class="hide"><label class="f" for="promo">Código promocional (opcional)</label><input id="promo" autocapitalize="characters"></div>
 <div class="err" id="err" role="alert"></div>
 <button class="btn" id="submit" style="margin-top:6px">Entrar</button>
 </div>
@@ -218,10 +217,10 @@ $("eye").onclick=()=>{const show=$("pass").type==="password";$("pass").type=show
 document.querySelectorAll("#auth .tabs button").forEach(b=>b.onclick=()=>{
   tab=b.dataset.t;
   document.querySelectorAll("#auth .tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
-  $("fn").classList.toggle("hide",tab==="in");$("fp").classList.toggle("hide",tab==="in");
+  $("fn").classList.toggle("hide",tab==="in");
   $("submit").textContent=tab==="in"?"Entrar":"Crear cuenta";$("err").textContent="";
 });
-const toUser=u=>({id:u.id,email:(u.email||"").toLowerCase(),name:u.user_metadata?.name||(u.email||"").split("@")[0],promo:(u.user_metadata?.promo||"").toUpperCase()});
+const toUser=u=>({id:u.id,email:(u.email||"").toLowerCase(),name:u.user_metadata?.name||(u.email||"").split("@")[0]});
 const authMsg=e=>{const m=String(e?.message||e);
   if(/invalid login/i.test(m))return "Correo o contraseña incorrectos.";
   if(/already registered/i.test(m))return "Ese correo ya tiene cuenta. Entra con tu contraseña.";
@@ -230,7 +229,7 @@ const authMsg=e=>{const m=String(e?.message||e);
   return m};
 function showLogin(){user=null;$("app").classList.add("hide");$("auth").classList.remove("hide")}
 $("submit").onclick=async()=>{
-  const email=$("email").value.trim().toLowerCase(),pass=$("pass").value,name=$("name").value.trim(),promo=$("promo").value.trim().toUpperCase(),er=$("err");
+  const email=$("email").value.trim().toLowerCase(),pass=$("pass").value,name=$("name").value.trim(),er=$("err");
   er.style.color="var(--dn)";
   if(NO_CFG)return er.textContent="Falta configurar SUPABASE_URL y SUPABASE_ANON_KEY en el archivo.";
   if(!/^\S+@\S+\.\S+$/.test(email))return er.textContent="Escribe un correo válido.";
@@ -239,7 +238,7 @@ $("submit").onclick=async()=>{
   $("submit").disabled=true;er.textContent="";loading(true,tab==="in"?"Iniciando sesión…":"Creando tu cuenta…");
   try{
     if(tab==="up"){
-      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name,promo}}});
+      const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name}}});
       if(error)throw error;
       if(!data.session){er.style.color="var(--up)";er.textContent="Cuenta creada. Revisa tu correo, confirma y luego entra.";return}
       start(toUser(data.user));
@@ -255,7 +254,6 @@ function start(u){
   loading(false);user=u;mem.session=u;store.set("cx_ses",u);
   $("auth").classList.add("hide");$("app").classList.remove("hide");
   $("hi").textContent="Hola, "+u.name;
-  $("pm").innerHTML=u.promo?`<div class="promo">Código <b>${u.promo.replace(/[<>&]/g,"")}</b> aplicado: comisión reducida al 0,5%.</div>`:"";
   $("err").textContent="";render();refreshOrders();
 }
 $("out").onclick=()=>{sb.auth.signOut();user=null;mem.session=null;store.set("cx_ses",null);$("app").classList.add("hide");$("auth").classList.remove("hide");$("pass").value=""};
@@ -293,20 +291,23 @@ const px=v=>"$"+v.toLocaleString("en-US",{maximumSignificantDigits:v>=1000?6:5})
 function render(){
   const q=$("q").value.trim().toLowerCase(),f=$("flt").value;
   const rows=COINS.map((c,i)=>({...c,i})).filter(c=>(!q||c.s.toLowerCase().includes(q)||c.n.toLowerCase().includes(q))&&(f==="all"||(f==="stable")===STABLE.includes(c.s)));
-  $("list").innerHTML=rows.length?rows.map(c=>{
+  const usdRow=(!q||"usd dolar dólar tropical".includes(q))&&f==="all"?`<li><button class="coin" data-usd="1"><span class="av"><svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="16" fill="#2e9e5b"/><text x="16" y="21.5" text-anchor="middle" font-size="15" font-weight="800" fill="#fff" font-family="Sora,sans-serif">$</text></svg></span><span class="nm"><b>USD (Dólar)</b><span>1 USDT = ${USD_PRECIO} USD</span></span><span class="pr">Cambiar<span>a USDT</span></span></button></li>`:"";
+  $("list").innerHTML=usdRow+(rows.length?rows.map(c=>{
     const bg=(BR[c.s]||[])[0]||"hsl("+hue(c.n)+" 55% 42%)",net=netOf(c);
     const ch=c.c?`<span class="${c.c>0?"up":"dn"}" style="display:inline;margin-left:6px">${c.c>0?"+":""}${c.c.toFixed(2)}%</span>`:"";
     return `<li><button class="coin" data-i="${c.i}"><span class="av">${svg(c.s,bg,(BR[c.s]||[0,c.s[0]])[1])}${net?`<span class="bd">${svg(NETC[net],NET[net],net[0])}</span>`:""}</span>
 <span class="nm"><b>${title(c)}</b><span>${px(c.p)}${ch}</span></span>
-<span class="pr">0<span>$0</span></span></button></li>`}).join(""):`<li class="empty">No encontramos "${q.replace(/[<>&]/g,"")}". Prueba con otro nombre.</li>`;
+<span class="pr">0<span>$0</span></span></button></li>`}).join(""):(usdRow?"":`<li class="empty">No encontramos "${q.replace(/[<>&]/g,"")}". Prueba con otro nombre.</li>`));
 }
 $("flt").onchange=render;
 $("q").oninput=render;
-$("list").onclick=e=>{const b=e.target.closest(".coin");if(b)open(+b.dataset.i)};
+$("list").onclick=e=>{const b=e.target.closest(".coin");if(!b)return;if(b.dataset.usd){document.querySelector('#md button[data-m="swap"]').click();open(USDT_IDX[0],true)}else open(+b.dataset.i)};
 
 const COMPRA=360,VENTA=300; // saldo móvil por 1 USDT: el cliente paga 360 al comprar y recibe 300 al vender
 const MI_NUMERO="59348187"; // EDITAR: número al que los clientes envían el saldo
 const usdt=c=>STABLE.includes(c.s)?1:c.p;
+const USD_PRECIO=1.06; // USD que paga el cliente por 1 USDT
+const TARJETA="9240 0699 9337 0655"; // Tarjeta Tropical
 const OVERRIDES={}; // EDITAR: "A>B": cuántos B recibes por 1 A (sin comisión extra)
 let mode="buy";
 const WORD={buy:"compra",sell:"venta",swap:"cambio"};
@@ -315,22 +316,32 @@ let payTxt="",shotData="";
 const ADDR={BEP20:"0xd40E216613764E3F7f1D7fa486a326BF30C3eaE4",BNB:"0xd40E216613764E3F7f1D7fa486a326BF30C3eaE4",BTC:"bc1qdkkhd6htjpsqdm3r7z2ujltzj2z4pwt3394nte",TRC20:"TGDea94zy8abxC9WZLxtojJnuRSnrvmmZk",TRX:"TGDea94zy8abxC9WZLxtojJnuRSnrvmmZk"};
 const LBL={BEP20:"USDT · red BEP20",BNB:"BNB · red BEP20 (BSC)",BTC:"Bitcoin · red Bitcoin",TRC20:"USDT · red TRC20",TRX:"TRX · red TRC20 (TRON)"};
 const dkey=c=>c.s==="USDT"?netOf(c):c.s;
+const USDT_IDX=COINS.map((c,k)=>c.s==="USDT"?k:-1).filter(k=>k>=0);
+function fillP2(){
+  const m=$("p1").value==="usd"?"u":"a";
+  if($("p2").dataset.m===m)return;
+  const prev=$("p2").value,list=m==="u"?USDT_IDX:COINS.map((_,k)=>k);
+  $("p2").innerHTML=list.map(k=>`<option value="${k}">${title(COINS[k])}</option>`).join("");
+  $("p2").dataset.m=m;$("p2").value=list.includes(+prev)?prev:list[0];
+}
 function go(n){["s1","s2","s3"].forEach((x,k)=>$(x).classList.toggle("hide",k+1!==n));$("stp").textContent="Paso "+n+" de 3 · "+["Cantidad","Pago","Comprobante"][n-1];$("oe").textContent=""}
-function open(i){
+function open(i,usd){
   cur=i;const c=COINS[i];
   $("ct").textContent=mode==="swap"?"Cambiar cripto":(mode==="buy"?"Comprar ":"Vender ")+title(c);
   $("fs").classList.toggle("hide",mode!=="swap");$("fp2").classList.toggle("hide",mode==="swap");$("fw").classList.toggle("hide",mode==="sell");
-  if(mode==="swap"){const o=COINS.map((x,k)=>`<option value="${k}">${title(x)}</option>`).join("");$("p1").innerHTML=o;$("p2").innerHTML=o;$("p1").value=i;$("p2").value=i===0?4:0}
+  if(mode==="swap"){const o=COINS.map((x,k)=>`<option value="${k}">${title(x)}</option>`).join("");$("p1").innerHTML=o+'<option value="usd">USD</option>';$("p1").value=usd?"usd":i;$("p2").dataset.m="";fillP2();$("p2").value=usd?USDT_IDX[0]:(i===0?4:0)}
   $("al").textContent=mode==="buy"?"¿Cuántos "+title(c)+" quieres comprar?":mode==="sell"?"¿Cuántos "+title(c)+" vendes?":"Cantidad que pagas";
   $("phl").textContent=mode==="buy"?"Tu número de teléfono (desde donde pagas)":"Número de teléfono donde recibes el saldo";
   ["amt","ph","wa","ref","shot"].forEach(k=>$(k).value="");shotData="";$("prev").classList.add("hide");
   go(1);calc();$("ov").classList.remove("hide");$("amt").focus();
 }
 function calc(){
-  const a=parseFloat($("amt").value)||0,f=user&&user.promo?.005:.01,c=COINS[cur];
+  if(mode==="swap")fillP2();
+  const a=parseFloat($("amt").value)||0,f=.015,c=COINS[cur];
   let out,fe,rt;
   if(mode==="buy"){const r=usdt(c)*COMPRA;rt="1 "+c.s+" = "+fmt(r,0)+" saldo";fe="Incluida";out=fmt(a,8)+" "+c.s;payTxt=Math.round(a*r).toLocaleString("es")+" de saldo móvil"}
   else if(mode==="sell"){const r=usdt(c)*VENTA;rt="1 "+c.s+" = "+fmt(r,0)+" saldo";fe="Incluida";out=Math.round(a*r).toLocaleString("es")+" de saldo móvil";payTxt=fmt(a,8)+" "+title(c)}
+  else if($("p1").value==="usd"){const B=COINS[+$("p2").value];rt="1 "+B.s+" = "+USD_PRECIO+" USD";fe="Incluida";out=fmt(a/USD_PRECIO,8)+" "+B.s;payTxt=fmt(a,2)+" USD"}
   else{
     const A=COINS[+$("p1").value],B=COINS[+$("p2").value],ov=OVERRIDES[title(A)+">"+title(B)],rv=OVERRIDES[title(B)+">"+title(A)],k=ov??(rv?1/rv:A.p/B.p),gross=a*k,g=ov?0:gross*f;
     rt="1 "+A.s+" = "+fmt(k,6)+" "+B.s;fe=ov?"Incluida":fmt(g,8)+" "+B.s;out=fmt(gross-g,8)+" "+B.s;payTxt=fmt(a,8)+" "+title(A);
@@ -339,7 +350,8 @@ function calc(){
 }
 function dep(){
   const A=mode==="swap"?COINS[+$("p1").value]:COINS[cur],B=mode==="swap"?COINS[+$("p2").value]:COINS[cur];
-  if(mode==="buy"){$("dl").textContent="Envía el saldo móvil a este número";$("dv").value=MI_NUMERO}
+  if(mode==="swap"&&$("p1").value==="usd"){$("dl").textContent="Envía los USD a esta tarjeta Tropical";$("dv").value=TARJETA}
+  else if(mode==="buy"){$("dl").textContent="Envía el saldo móvil a este número";$("dv").value=MI_NUMERO}
   else{const k=dkey(A);$("dl").textContent="Envía tus "+LBL[k]+". Usa solo esta red o puedes perder los fondos.";$("dv").value=ADDR[k]||""}
   $("wl").textContent="Tu dirección de billetera para recibir "+title(B);
 }
@@ -424,7 +436,7 @@ function card(o,admin){
     (o.shot?`<img class="shot" src="${o.shot}" alt="Comprobante adjunto">`:"")+
     (o.status==="review"?`<div class="acts"><button style="background:var(--up);color:#04221a" data-id="${esc(o.id)}" data-s="done">Aprobar</button><button style="background:var(--dn);color:#fff" data-id="${esc(o.id)}" data-s="rejected">Rechazar</button></div>`:"")+`</div>`;
 }
-function memberCard(m,n){return `<div class="oc"><div class="r"><b>${esc(m.name)}</b><span class="badge b-done">${n} pedidos</span></div><div class="r"><span>Correo</span><span>${esc(m.email)}</span></div><div class="r"><span>Código</span><span>${esc(m.promo||"—")}</span></div><div class="r"><span>Registro</span><span>${m.t?fdate(m.t):"—"}</span></div></div>`}
+function memberCard(m,n){return `<div class="oc"><div class="r"><b>${esc(m.name)}</b><span class="badge b-done">${n} pedidos</span></div><div class="r"><span>Correo</span><span>${esc(m.email)}</span></div><div class="r"><span>Registro</span><span>${m.t?fdate(m.t):"—"}</span></div></div>`}
 let busy=false;
 async function refreshOrders(){
   if(!user||busy)return;busy=true;
